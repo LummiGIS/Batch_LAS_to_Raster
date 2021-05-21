@@ -1,39 +1,51 @@
-'''Converts all las files in a directory (and any subdirectories) to a raster format.  The resulting rasters have their vertical datums transformed from WGS84(EGM96) to NAVD88'''
+#!/usr/bin/env python3
+'''Converts all las files in a directory to a geotiff.  
+Change kwargs for parameter changes...'''
+
+__author__ = 'Gerry Gabrisch/Lummi GIS Division'
+__date__ = 'May 2021'
+__copyright__ = '(C) 2021, Lummi Indian Business Council'
+__license__ = "MIT"
+__version__ = "1.0"
+__email__ = "geraldg@lummi-nsn.gov"
+__status__ = "Production"
 
 import sys
 import traceback
 import os
 import arcpy
 arcpy.env.overwriteOutput = True
+#save time - don't build pyramids...
+arcpy.env.pyramid = "NONE"
+
+
 try:
-    in_dir = r'F:\2019DSM\test'
+    #The input directory of las
+    in_dir = r'F:\2019DSM\WRIA_4_Upper_Skagit'
+    #the directory to store the geotiffs
+    out_dir = r'K:\WDFWPhotogrammetryDSM\WRIA4UpperSkagit'
+    
+    
+    def file_name(file, out_dir):
+        '''build the new file path and name'''
+        file_list = file.split("\\")
+        file_name = file_list[-1]
+        file_name = file_name.split(".")[0]
+        out_file = file_name+ '.tif'
+        out_file =  os.path.join(out_dir, out_file)
+        return out_file
+    
+
     for root, dirs, files in os.walk(in_dir):
         for file in files:
             if(file.endswith(".las")):
+                out_file = file_name(file, out_dir)
                 in_las = os.path.join(root, file)
-                out_ras = in_las.replace('.las', '.tif')
+               
                 print('Working on: ',in_las)
-        
                 kwargs = {'value_field': 'ELEVATION', 'data_type': 'FLOAT', 'sampling_type': 'CELLSIZE', 'sampling_value':5.0, 'z_factor':3.28084}
-                arcpy.conversion.LasDatasetToRaster(in_las, out_ras, **kwargs)    
-    
-                #arcpy.ProjectRaster_management("image.tif", "reproject.tif", "World_Mercator.prj","BILINEAR", "5", "NAD_1983_To_WGS_1984_5", "#", "#")                
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+                arcpy.conversion.LasDatasetToRaster(in_las, out_file, **kwargs)    
+  
 
 except arcpy.ExecuteError: 
     # Get the tool error messages 
